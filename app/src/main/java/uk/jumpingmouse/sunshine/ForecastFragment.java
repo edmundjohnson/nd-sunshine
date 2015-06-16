@@ -43,7 +43,7 @@ public class ForecastFragment extends Fragment {
      * Example of a full URL:
      * http://api.openweathermap.org/data/2.5/forecast/daily?id=2654675&mode=json&units=metric&cnt=7
      */
-    private static final String URL_DAILY_FORECAST = "api.openweathermap.org/data/2.5/forecast/daily";
+    private static final String URL_DAILY_FORECAST = "http://api.openweathermap.org/data/2.5/forecast/daily";
     /** The forecast URL parameter for the city id ("q" does not work for Bristol, UK). */
     private static final String FORECAST_PARAM_CITY_ID = "id";
     /** The forecast URL parameter for the format required (JSON, XML, etc.). */
@@ -64,6 +64,9 @@ public class ForecastFragment extends Fragment {
 
     private WeatherDataParser weatherDataParser;
 
+    private List<String> weekForecastItems;
+
+    private ArrayAdapter<String> forecastAdapter;
 
     /**
      * Default constructor.
@@ -76,6 +79,7 @@ public class ForecastFragment extends Fragment {
         super.onCreate(savedInstanceState);
         // Indicate that the fragment can handle menu events
         this.setHasOptionsMenu(true);
+
     }
 
     @Override
@@ -104,10 +108,7 @@ public class ForecastFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // Get the forecast
-        new FetchWeatherTask().execute(CITY_ID_BRISTOL);
-
-        String[] forecastData = new String[] {
+        String[] forecastData = new String[]{
                 "Today - Sunny - 88 / 63",
                 "Tomorrow - Cloudy - 82 / 58",
                 "Wednesday - Foggy - 75 / 54",
@@ -117,9 +118,9 @@ public class ForecastFragment extends Fragment {
                 "Sunday - Tornado - 78 / 56"
         };
 
-        List<String> weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
+        weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
 
-        ArrayAdapter<String> forecastAdapter = new ArrayAdapter<>(
+        forecastAdapter = new ArrayAdapter<>(
                 // the current context
                 getActivity(),
                 // the list item layout
@@ -130,10 +131,13 @@ public class ForecastFragment extends Fragment {
 
         // Inflate the fragment
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-        // Get a reference to the ListView, and attach the adapter to it
+        // Get a reference to the ListView
         ListView listForecast = (ListView) rootView.findViewById(R.id.listview_forecast);
+        // Attach the adapter to the ListView
         listForecast.setAdapter(forecastAdapter);
+
+        // Get the real forecast
+        new FetchWeatherTask().execute(CITY_ID_BRISTOL);
 
         return rootView;
     }
@@ -156,25 +160,44 @@ public class ForecastFragment extends Fragment {
                 throw new InvalidParameterException("FetchWeatherTask requires a single parameter, the city id");
             }
 
-            // Get the raw JSON weather data.
+            // Get the raw JSON weather data from the weather service
             String jsonForecast = getForecastJson(params[0], FORECAST_DAYS);
-            Log.v(LOG_TAG, "jsonForecast = \n" + jsonForecast);
 
+            // Parse the raw JSON data
             String[] forecastData = null;
             try {
                 forecastData = getWeatherDataParser().getWeatherDataFromJson(jsonForecast, FORECAST_DAYS);
-                if (forecastData == null) {
-                    Log.v(LOG_TAG, "forecastData is null");
-                } else {
-                    for (String dayForecast : forecastData) {
-                        Log.v(LOG_TAG, "dayForecast: " + dayForecast);
-                    }
-                }
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "JSONException while parsing raw weather data");
             }
 
             return forecastData;
+        }
+
+        /**
+         * <p>Runs on the UI thread after {@link #doInBackground}. The
+         * specified result is the value returned by {@link #doInBackground}.</p>
+         * <p/>
+         * <p>This method won't be invoked if the task was cancelled.</p>
+         * @param forecastData The result of the operation computed by {@link #doInBackground}.
+         * @see #onPreExecute
+         * @see #doInBackground
+         * @see #onCancelled(Object)
+         */
+        @Override
+        protected void onPostExecute(String[] forecastData) {
+            // The following line does not work, because it causes weekForecastItems
+            // to reference a new object, one which is not referenced by the adapter.
+            //weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
+
+            // The following line works, because weekForecastItems continues to reference the
+            // same object as before.
+            weekForecastItems.clear();
+            weekForecastItems.addAll(Arrays.asList(forecastData));
+            forecastAdapter.notifyDataSetChanged();
+
+            // superclass method is currently empty
+            //super.onPostExecute(forecastData);
         }
 
         private String getForecastJson(String cityId, int numDays) {
@@ -186,17 +209,14 @@ public class ForecastFragment extends Fragment {
 
             try {
                 // Build the forecast URI using the standard values and the parameters
-                Uri.Builder uriBuilder = new Uri.Builder();
-                uriBuilder.scheme("http");
-                uriBuilder.authority(URL_DAILY_FORECAST);
-                uriBuilder.appendQueryParameter(FORECAST_PARAM_CITY_ID, cityId);
-                uriBuilder.appendQueryParameter(FORECAST_PARAM_MODE, MODE_JSON);
-                uriBuilder.appendQueryParameter(FORECAST_PARAM_UNITS, UNITS_METRIC);
-                uriBuilder.appendQueryParameter(FORECAST_PARAM_DAY_COUNT, Integer.toString(numDays));
+                //Uri.Builder uriBuilder = new Uri.Builder();
+                Uri.Builder uriBuilder = Uri.parse(URL_DAILY_FORECAST).buildUpon()
+                        .appendQueryParameter(FORECAST_PARAM_CITY_ID, cityId)
+                        .appendQueryParameter(FORECAST_PARAM_MODE, MODE_JSON)
+                        .appendQueryParameter(FORECAST_PARAM_UNITS, UNITS_METRIC)
+                        .appendQueryParameter(FORECAST_PARAM_DAY_COUNT, Integer.toString(numDays));
 
                 // Construct the URL for the query.
-                String strUrl = uriBuilder.build().toString();
-                Log.v(LOG_TAG, "Forecast URL: " + strUrl);
                 URL url = new URL(uriBuilder.build().toString());
 
                 // Create the HTTP request, and open the connection
@@ -229,7 +249,7 @@ public class ForecastFragment extends Fragment {
                 forecastJson = builder.toString();
 
             } catch (IOException e) {
-                Log.e(LOG_TAG, "IOException", e);
+                Log.e(LOG_TAG, "IOException while getting weather data: " + e.getMessage(), e);
                 // If the code didn't successfully get the weather data, there's no point in
                 // attempting to parse it.
                 return null;
