@@ -7,9 +7,6 @@ import android.view.MenuItem;
 
 
 /**
- * TODO: Daily Benefit: Set translatable="false" for Strings which will not be translated
- * TODO: Daily Benefit: Use HttpURLConnection not HttpClient
- *
  * The main activity.
  * @author Edmund Johnson.
  */
