@@ -35,9 +35,8 @@ public class ForecastFragment extends Fragment {
     /** The log tag for this class. */
     private static final String LOG_TAG = ForecastFragment.class.getSimpleName();
 
-
     /**
-     * The base URL for retrieving a daily weather forecast from OpenWeatherMap.
+     * The base URL for requesting a daily weather forecast from OpenWeatherMap.
      * Possible parameters are available at OpenWeatherMap's forecast API page,
      * at http://openweathermap.org/API#forecast
      * Example of a full URL:
@@ -53,20 +52,23 @@ public class ForecastFragment extends Fragment {
     /** The forecast URL parameter for the number of days required. */
     private static final String FORECAST_PARAM_DAY_COUNT = "cnt";
 
-    /** Bristol's city id (Mountain View's id is 94043). */
+    /** The city id for Bristol. */
     private static final String CITY_ID_BRISTOL = "2654675";
-    /** The mode for getting JSON returned. */
+    /** The city id for Mountain View. */
+    //private static final String CITY_ID_MOUNTAIN_VIEW = "94043";
+    /** The mode for requesting a forecast in JSON format. */
     private static final String MODE_JSON = "json";
-    /** The mode for getting values returned in metric units. */
+    /** The units for requesting a forecast in metric format. */
     private static final String UNITS_METRIC = "metric";
-    /** The day count for a 7-day forecast. */
-    private static final int FORECAST_DAYS = 7;
+    /** The day count for requesting a forecast for the next week. */
+    private static final int DAY_COUNT_SEVEN = 7;
 
     private WeatherDataParser weatherDataParser;
 
     private List<String> weekForecastItems;
 
     private ArrayAdapter<String> forecastAdapter;
+
 
     /**
      * Default constructor.
@@ -161,12 +163,12 @@ public class ForecastFragment extends Fragment {
             }
 
             // Get the raw JSON weather data from the weather service
-            String jsonForecast = getForecastJson(params[0], FORECAST_DAYS);
+            String jsonForecast = getForecastJson(params[0], DAY_COUNT_SEVEN);
 
             // Parse the raw JSON data
             String[] forecastData = null;
             try {
-                forecastData = getWeatherDataParser().getWeatherDataFromJson(jsonForecast, FORECAST_DAYS);
+                forecastData = getWeatherDataParser().getWeatherDataFromJson(jsonForecast, DAY_COUNT_SEVEN);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "JSONException while parsing raw weather data");
             }
@@ -205,7 +207,8 @@ public class ForecastFragment extends Fragment {
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
-            String forecastJson = null;
+            // Will contain the raw JSON response as a string.
+            String forecastJson;
 
             try {
                 // Build the forecast URI using the standard values and the parameters
