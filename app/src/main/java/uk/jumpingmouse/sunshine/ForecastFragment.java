@@ -1,5 +1,6 @@
 package uk.jumpingmouse.sunshine;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -85,7 +87,7 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu (Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_forecastfragment, menu);
     }
 
@@ -111,6 +113,9 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         String[] forecastData = new String[]{
+        };
+        /*
+        String[] forecastData = new String[]{
                 "Today - Sunny - 88 / 63",
                 "Tomorrow - Cloudy - 82 / 58",
                 "Wednesday - Foggy - 75 / 54",
@@ -119,10 +124,11 @@ public class ForecastFragment extends Fragment {
                 "Saturday - Snow and Ice - 64 / 44",
                 "Sunday - Tornado - 78 / 56"
         };
+        */
 
         weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
 
-        forecastAdapter = new ArrayAdapter<>(
+        forecastAdapter = new ArrayAdapter<String>(
                 // the current context
                 getActivity(),
                 // the list item layout
@@ -137,6 +143,18 @@ public class ForecastFragment extends Fragment {
         ListView listForecast = (ListView) rootView.findViewById(R.id.listview_forecast);
         // Attach the adapter to the ListView
         listForecast.setAdapter(forecastAdapter);
+
+        listForecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String forecast = forecastAdapter.getItem(position);
+                //Toast.makeText(getActivity(), forecast, Toast.LENGTH_SHORT).show();
+                // Start the detail activity
+                Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+                detailIntent.setData(Uri.parse(forecast));
+                startActivity(detailIntent);
+            }
+        });
 
         // Get the real forecast
         new FetchWeatherTask().execute(CITY_ID_BRISTOL);

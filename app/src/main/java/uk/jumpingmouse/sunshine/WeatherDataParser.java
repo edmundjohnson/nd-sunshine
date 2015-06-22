@@ -17,10 +17,10 @@ public class WeatherDataParser {
     /** The log tag for this class. */
     //private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
 
-    /* The date/time conversion code is going to be moved outside the asynctask later,
+    /* The date/time conversion code is going to be moved outside the AsyncTask later,
      * so for convenience we're breaking it out into its own method now.
      */
-    private String getReadableDateString(long time, Locale locale){
+    private String getReadableDateString(long time, Locale locale) {
         // Because the API returns a unix timestamp (measured in seconds),
         // it must be converted to milliseconds in order to be converted to valid date.
         SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd", locale);
@@ -29,8 +29,11 @@ public class WeatherDataParser {
 
     /**
      * Format the weather high/low temperatures for presentation.
+     * @param high the high temperature
+     * @param low the low temperature
+     * @return the weather high/low temperatures for presentation
      */
-    private String formatHighLow(double high, double low) {
+    private final String formatHighLow(final double high, final double low) {
         // For presentation, assume the user doesn't care about tenths of a degree.
         long roundedHigh = Math.round(high);
         long roundedLow = Math.round(low);
@@ -40,10 +43,14 @@ public class WeatherDataParser {
 
     /**
      * Take the String representing the complete forecast in JSON Format and
-     * pull out the data we need to construct the Strings needed for the wireframes.
+     * pull out the data needed to construct the Strings needed for the wireframes.
      *
      * Fortunately parsing is easy:  constructor takes the JSON string and converts it
      * into an Object hierarchy for us.
+     * @param jsonStringForecast the forecast in JSON format
+     * @param numDays the number of days of data to return
+     * @return the weather data as an array of Strings
+     * @throws JSONException if there is an error while parsing the JSON
      */
     public String[] getWeatherDataFromJson(String jsonStringForecast, int numDays) throws JSONException {
 
@@ -75,7 +82,7 @@ public class WeatherDataParser {
         dayTime = new Time();
 
         String[] strDayForecasts = new String[numDays];
-        for(int i = 0; i < weatherArray.length(); i++) {
+        for (int i = 0; i < weatherArray.length(); i++) {
             // For now, we are using the format "Date - description - high/low"
             String dateHumanReadable;
             String weatherDescription;
@@ -107,31 +114,6 @@ public class WeatherDataParser {
 
         return strDayForecasts;
     }
-
-    /**
-     * Given a string of the form returned by the api call:
-     * http://api.openweathermap.org/data/2.5/forecast/daily?q=94043&mode=json&units=metric&cnt=7
-     * retrieve the maximum temperature for the day indicated by dayIndex
-     * (Note: 0-indexed, so 0 would refer to the first day).
-     */
-    /*
-    public static double getMaxTemperatureForDay(String weatherJsonStr, int dayIndex)
-            throws JSONException {
-        if (dayIndex < 0 || dayIndex > 6) {
-            Log.e(LOG_TAG, "dayIndex must be between 0 and 6 inclusive");
-            return -1;
-        } else if (weatherJsonStr == null || weatherJsonStr.isEmpty()) {
-            Log.e(LOG_TAG, "weatherJsonStr was null or empty");
-            return -1;
-        } else {
-            JSONObject weeklyForecast = new JSONObject(weatherJsonStr);
-            JSONArray dayForecasts = weeklyForecast.getJSONArray("list");
-            JSONObject dayForecast = dayForecasts.getJSONObject(dayIndex);
-            JSONObject dayTemp = dayForecast.getJSONObject("temp");
-            return dayTemp.getDouble("max");
-        }
-    }
-    */
 
 /* TESTS
 
