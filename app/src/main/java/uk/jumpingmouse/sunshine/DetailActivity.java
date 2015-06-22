@@ -1,7 +1,6 @@
 package uk.jumpingmouse.sunshine;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -15,8 +14,6 @@ import android.widget.TextView;
 
 public class DetailActivity extends AppCompatActivity {
 
-    private static  String forecast;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,11 +24,7 @@ public class DetailActivity extends AppCompatActivity {
                     .add(R.id.container, new PlaceholderFragment())
                     .commit();
         }
-        Intent intent = getIntent();
-        Uri uri = intent.getData();
-        forecast = uri.getPath();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -64,6 +57,9 @@ public class DetailActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
+
+            Intent intent = getActivity().getIntent();
+            String forecast = intent.getStringExtra(Intent.EXTRA_TEXT);
 
             TextView txtForecast = (TextView) rootView.findViewById(R.id.txtForecast);
             txtForecast.setText(forecast);

@@ -33,9 +33,9 @@ import java.util.List;
  * The fragment which displays the list of daily forecasts.
  * @author Edmund Johnson.
  */
-public class ForecastFragment extends Fragment {
+public class MainFragment extends Fragment {
     /** The log tag for this class. */
-    private static final String LOG_TAG = ForecastFragment.class.getSimpleName();
+    private static final String LOG_TAG = MainFragment.class.getSimpleName();
 
     /**
      * The base URL for requesting a daily weather forecast from OpenWeatherMap.
@@ -75,7 +75,7 @@ public class ForecastFragment extends Fragment {
     /**
      * Default constructor.
      */
-    public ForecastFragment() {
+    public MainFragment() {
     }
 
     @Override
@@ -151,7 +151,7 @@ public class ForecastFragment extends Fragment {
                 //Toast.makeText(getActivity(), forecast, Toast.LENGTH_SHORT).show();
                 // Start the detail activity
                 Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
-                detailIntent.setData(Uri.parse(forecast));
+                detailIntent.putExtra(Intent.EXTRA_TEXT, forecast);
                 startActivity(detailIntent);
             }
         });
