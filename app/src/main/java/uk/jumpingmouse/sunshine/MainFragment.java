@@ -1,9 +1,12 @@
 package uk.jumpingmouse.sunshine;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -88,7 +91,7 @@ public class MainFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_forecastfragment, menu);
+        inflater.inflate(R.menu.menu_mainfragment, menu);
     }
 
     /**
@@ -102,7 +105,7 @@ public class MainFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            new FetchWeatherTask().execute(CITY_ID_BRISTOL);
+            updateWeather();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -156,12 +159,34 @@ public class MainFragment extends Fragment {
             }
         });
 
-        // Get the real forecast
-        new FetchWeatherTask().execute(CITY_ID_BRISTOL);
+        // Get the forecast
+        updateWeather();
 
         return rootView;
     }
 
+    /**
+     * Update the weather data in the background, and display it.
+     */
+    private void updateWeather() {
+        new FetchWeatherTask().execute(getPreferenceLocation(getActivity()));
+    }
+
+    /**
+     * Returns the current preference setting for the location.
+     * @param context the context
+     * @return the current preference setting for the location
+     */
+    private String getPreferenceLocation(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(getString(R.string.pref_location_key),
+                                getString(R.string.pref_location_default));
+    }
+
+    /**
+     * Returns a reference to the JSON weather data parser.
+     * @return a reference to the JSON weather data parser
+     */
     private WeatherDataParser getWeatherDataParser() {
         if (weatherDataParser == null) {
             weatherDataParser = new WeatherDataParser();
@@ -206,15 +231,17 @@ public class MainFragment extends Fragment {
          */
         @Override
         protected void onPostExecute(String[] forecastData) {
-            // The following line does not work, because it causes weekForecastItems
-            // to reference a new object, one which is not referenced by the adapter.
-            //weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
+            if (forecastData != null && forecastData.length > 0) {
+                // The following line does not work, because it causes weekForecastItems
+                // to reference a new object, one which is not referenced by the adapter.
+                //weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
 
-            // The following line works, because weekForecastItems continues to reference the
-            // same object as before.
-            weekForecastItems.clear();
-            weekForecastItems.addAll(Arrays.asList(forecastData));
-            forecastAdapter.notifyDataSetChanged();
+                // The following line works, because weekForecastItems continues to reference the
+                // same object as before.
+                weekForecastItems.clear();
+                weekForecastItems.addAll(Arrays.asList(forecastData));
+                forecastAdapter.notifyDataSetChanged();
+            }
 
             // superclass method is currently empty
             //super.onPostExecute(forecastData);
