@@ -195,7 +195,7 @@ public class MainFragment extends Fragment {
     }
 
     /**
-     * Background task for getting a weather forecast over the internet.
+     * Background task for getting a weather forecast from OpenWeatherMap.
      */
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
