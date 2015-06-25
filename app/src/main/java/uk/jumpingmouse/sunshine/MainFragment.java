@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -58,7 +59,7 @@ public class MainFragment extends Fragment {
     private static final String FORECAST_PARAM_DAY_COUNT = "cnt";
 
     /** The city id for Bristol. */
-    private static final String CITY_ID_BRISTOL = "2654675";
+    //private static final String CITY_ID_BRISTOL = "2654675";
     /** The city id for Mountain View. */
     //private static final String CITY_ID_MOUNTAIN_VIEW = "94043";
     /** The mode for requesting a forecast in JSON format. */
@@ -81,55 +82,45 @@ public class MainFragment extends Fragment {
     public MainFragment() {
     }
 
+    /**
+     * Called to do initial creation of a fragment.
+     * This is called after {@link #onAttach(Activity)}
+     * and before {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * Note that this can be called while the fragment's activity is
+     * still in the process of being created.  As such, you cannot rely
+     * on things like the activity's content view hierarchy being initialized
+     * at this point.  If you want to do work once the activity itself is
+     * created, see {@link #onActivityCreated(Bundle)}.
+     *
+     * @param savedInstanceState If the fragment is being re-created from
+     *                           a previous saved state, this is the state.
+     */
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Indicate that the fragment can handle menu events
         this.setHasOptionsMenu(true);
-
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_mainfragment, menu);
     }
 
     /**
-     * Handle the selection of a menu item.
-     * The action bar will automatically handle clicks on the Home/Up button, so long
-     * as a parent activity is specified in AndroidManifest.xml.
-     * @param item the menu item selected
-     * @return whether the event has been consumed
+     * Called to have the fragment instantiate its user interface view. This will be
+     * called between {@link #onCreate(Bundle)} and {@link #onActivityCreated(Bundle)}.
+     * If you return a View from here, you will later be called in
+     * {@link #onDestroyView} when the view is being released.
+     *
+     * @param inflater the LayoutInflater object that can be used to inflate any views
+     *                 in the fragment
+     * @param container if non-null, this is the parent view that the fragment's UI
+     *                  should be attached to.  The fragment should not add the view itself,
+     *                  but this can be used to generate the LayoutParams of the view
+     * @param savedInstanceState if non-null, this fragment is being re-constructed from
+     *                           a previous saved state as given here.
+     * @return the View for the fragment's UI, or null
      */
+    @Nullable
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            updateWeather();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        String[] forecastData = new String[]{
-        };
-        /*
-        String[] forecastData = new String[]{
-                "Today - Sunny - 88 / 63",
-                "Tomorrow - Cloudy - 82 / 58",
-                "Wednesday - Foggy - 75 / 54",
-                "Thursday - STAY INDOORS - 60 / 41",
-                "Friday - Scorcher - 95 / 72",
-                "Saturday - Snow and Ice - 64 / 44",
-                "Sunday - Tornado - 78 / 56"
-        };
-        */
-
-        weekForecastItems = new ArrayList<>(Arrays.asList(forecastData));
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        weekForecastItems = new ArrayList<>();
 
         forecastAdapter = new ArrayAdapter<String>(
                 // the current context
@@ -159,10 +150,19 @@ public class MainFragment extends Fragment {
             }
         });
 
+        return rootView;
+    }
+
+    /**
+     * Called when the Fragment is visible to the user.
+     * This is generally tied to {@link android.app.Activity#onStart() Activity.onStart}
+     * of the containing Activity's lifecycle.
+     */
+    @Override
+    public void onStart() {
+        super.onStart();
         // Get the forecast
         updateWeather();
-
-        return rootView;
     }
 
     /**
@@ -178,9 +178,30 @@ public class MainFragment extends Fragment {
      * @return the current preference setting for the location
      */
     private String getPreferenceLocation(Context context) {
+        return getPreference(context,
+                R.string.pref_location_key, R.string.pref_location_default);
+    }
+
+    /**
+     * Returns the current preference setting for the temperature units.
+     * @param context the context
+     * @return the current preference setting for the temperature units
+     */
+    private String getPreferenceTemperatureUnits(Context context) {
+        return getPreference(context,
+                R.string.pref_temperature_units_key, R.string.pref_temperature_units_default);
+    }
+
+    /**
+     * Returns a current preference.
+     * @param context the context
+     * @param key the string resource id of the preference's key
+     * @param defaultValue the string resource id of the preference's default value
+     * @return the current preference setting for the preference
+     */
+    private String getPreference(Context context, int key, int defaultValue) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(getString(R.string.pref_location_key),
-                                getString(R.string.pref_location_default));
+        return prefs.getString(getString(key), getString(defaultValue));
     }
 
     /**
@@ -192,6 +213,28 @@ public class MainFragment extends Fragment {
             weatherDataParser = new WeatherDataParser();
         }
         return weatherDataParser;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_mainfragment, menu);
+    }
+
+    /**
+     * Handle the selection of a menu item.
+     * The action bar will automatically handle clicks on the Home/Up button, so long
+     * as a parent activity is specified in AndroidManifest.xml.
+     * @param item the menu item selected
+     * @return whether the event has been consumed
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_refresh) {
+            updateWeather();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -211,7 +254,8 @@ public class MainFragment extends Fragment {
             // Parse the raw JSON data
             String[] forecastData = null;
             try {
-                forecastData = getWeatherDataParser().getWeatherDataFromJson(jsonForecast, DAY_COUNT_SEVEN);
+                forecastData = getWeatherDataParser().getWeatherDataFromJson(
+                        jsonForecast, DAY_COUNT_SEVEN, getPreferenceTemperatureUnits(getActivity()));
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "JSONException while parsing raw weather data");
             }
