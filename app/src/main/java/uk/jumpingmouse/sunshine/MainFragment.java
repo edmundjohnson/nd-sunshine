@@ -3,6 +3,8 @@ package uk.jumpingmouse.sunshine;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -32,6 +34,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The fragment which displays the list of daily forecasts.
@@ -165,6 +168,35 @@ public class MainFragment extends Fragment {
         updateWeather();
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_mainfragment, menu);
+    }
+
+    /**
+     * Handle the selection of a menu item.
+     * The action bar will automatically handle clicks on the Home/Up button, so long
+     * as a parent activity is specified in AndroidManifest.xml.
+     * @param item the menu item selected
+     * @return whether the event has been consumed
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch(id) {
+            case R.id.action_refresh:
+                updateWeather();
+                return true;
+
+            case R.id.action_show_location:
+                showLocation();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     /**
      * Update the weather data in the background, and display it.
      */
@@ -173,13 +205,36 @@ public class MainFragment extends Fragment {
     }
 
     /**
+     * Update the weather data in the background, and display it.
+     */
+    private void showLocation() {
+        String location = getPreferenceLocation(getActivity());
+        try {
+            Geocoder geocoder = new Geocoder(getActivity());
+            List<Address> addresses = geocoder.getFromLocationName(location, 1);
+            if (addresses != null) {
+                double latitude = addresses.get(0).getLatitude();
+                double longitude = addresses.get(0).getLongitude();
+                Uri geoLocation = Uri.parse("geo:" + latitude + "," + longitude);
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(geoLocation);
+                //if (intent.resolveActivity(getPackageManager()) != null) {
+                startActivity(intent);
+                //}
+            }
+        } catch (IOException e) {
+
+        }
+    }
+
+    /**
      * Returns the current preference setting for the location.
      * @param context the context
      * @return the current preference setting for the location
      */
     private String getPreferenceLocation(Context context) {
-        return getPreference(context,
-                R.string.pref_location_key, R.string.pref_location_default);
+        return getPreference(context, R.string.pref_location_key, R.string.pref_location_default);
     }
 
     /**
@@ -187,9 +242,8 @@ public class MainFragment extends Fragment {
      * @param context the context
      * @return the current preference setting for the temperature units
      */
-    private String getPreferenceTemperatureUnits(Context context) {
-        return getPreference(context,
-                R.string.pref_temperature_units_key, R.string.pref_temperature_units_default);
+    private String getPreferenceUnits(Context context) {
+        return getPreference(context, R.string.pref_units_key, R.string.pref_units_default);
     }
 
     /**
@@ -215,28 +269,6 @@ public class MainFragment extends Fragment {
         return weatherDataParser;
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_mainfragment, menu);
-    }
-
-    /**
-     * Handle the selection of a menu item.
-     * The action bar will automatically handle clicks on the Home/Up button, so long
-     * as a parent activity is specified in AndroidManifest.xml.
-     * @param item the menu item selected
-     * @return whether the event has been consumed
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            updateWeather();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     /**
      * Background task for getting a weather forecast from OpenWeatherMap.
      */
@@ -255,7 +287,7 @@ public class MainFragment extends Fragment {
             String[] forecastData = null;
             try {
                 forecastData = getWeatherDataParser().getWeatherDataFromJson(
-                        jsonForecast, DAY_COUNT_SEVEN, getPreferenceTemperatureUnits(getActivity()));
+                        jsonForecast, DAY_COUNT_SEVEN, getPreferenceUnits(getActivity()));
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "JSONException while parsing raw weather data");
             }

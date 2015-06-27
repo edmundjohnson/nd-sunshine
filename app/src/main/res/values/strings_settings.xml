@@ -24,17 +24,17 @@
     <string name="pref_location_default" translatable="false">2654675</string>
 
     <!-- Temperature Units -->
-    <string name="pref_temperature_units_label">Temperature Units</string>
-    <string name="pref_temperature_units_key" translatable="false">temperatureUnits</string>
-    <string-array name="pref_temperature_units_list_labels">
+    <string name="pref_units_label">Temperature Units</string>
+    <string name="pref_units_key" translatable="false">units</string>
+    <string-array name="pref_units_list_labels">
         <item>Centigrade</item>
         <item>Fahrenheit</item>
     </string-array>
-    <string-array name="pref_temperature_units_list_values">
-        <item>C</item>
-        <item>F</item>
+    <string-array name="pref_units_list_values">
+        <item>metric</item>
+        <item>imperial</item>
     </string-array>
-    <string name="pref_temperature_units_default" translatable="false">C</string>
+    <string name="pref_units_default" translatable="false">metric</string>
 
     <!-- Example settings for Data & Sync -->
     <!--

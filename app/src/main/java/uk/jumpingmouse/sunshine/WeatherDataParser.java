@@ -17,7 +17,7 @@ public class WeatherDataParser {
     /** The log tag for this class. */
     //private static final String LOG_TAG = WeatherDataParser.class.getSimpleName();
 
-    private static final String TEMPERATURE_UNITS_FAHRENHEIT = "F";
+    private static final String UNITS_IMPERIAL = "imperial";
 
     /* The date/time conversion code is going to be moved outside the AsyncTask later,
      * so for convenience we're breaking it out into its own method now.
@@ -54,8 +54,7 @@ public class WeatherDataParser {
      * @return the weather data as an array of Strings
      * @throws JSONException if there is an error while parsing the JSON
      */
-    public String[] getWeatherDataFromJson(String jsonStringForecast, int numDays,
-                                           String temperatureUnits)
+    public String[] getWeatherDataFromJson(String jsonStringForecast, int numDays, String units)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
@@ -113,8 +112,8 @@ public class WeatherDataParser {
             double high = temperatureObject.getDouble(OWM_MAX);
             double low = temperatureObject.getDouble(OWM_MIN);
             temperatureHighAndLow = formatHighLow(
-                    formatTemperature(high, temperatureUnits),
-                    formatTemperature(low, temperatureUnits));
+                    formatTemperature(high, units),
+                    formatTemperature(low, units));
 
             strDayForecasts[i] = dateHumanReadable
                                     + " - " + weatherDescription
@@ -125,13 +124,13 @@ public class WeatherDataParser {
     }
 
     /**
-     * Formats a temperature in specified temperature units.
+     * Formats a temperature in specified units.
      * @param temperatureCentigrade a temperature in centigrade
-     * @param temperatureUnits the temperature units, "1" for centigrade, "2" for fahrenheit
+     * @param units the units, "metric" for centigrade, "imperial" for fahrenheit
      * @return the temperature in the required units
      */
-    private double formatTemperature(double temperatureCentigrade, String temperatureUnits) {
-        if (TEMPERATURE_UNITS_FAHRENHEIT.equals(temperatureUnits)) {
+    private double formatTemperature(double temperatureCentigrade, String units) {
+        if (UNITS_IMPERIAL.equals(units)) {
             return temperatureCentigrade * 9 / 5 + 32;
         } else {
             return temperatureCentigrade;

@@ -5,6 +5,12 @@
     tools:context="uk.jumpingmouse.sunshine.DetailActivity">
 
     <item
+        android:id="@+id/action_show_location"
+        android:title="@string/action_show_location"
+        android:orderInCategory="300"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_settings"
         android:title="@string/title_activity_settings"
         android:orderInCategory="900"
