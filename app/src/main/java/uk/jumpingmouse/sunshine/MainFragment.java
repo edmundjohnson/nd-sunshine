@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 
@@ -34,7 +35,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * The fragment which displays the list of daily forecasts.
@@ -53,7 +53,8 @@ public class MainFragment extends Fragment {
      */
     private static final String URL_DAILY_FORECAST = "http://api.openweathermap.org/data/2.5/forecast/daily";
     /** The forecast URL parameter for the city id ("q" does not work for Bristol, UK). */
-    private static final String FORECAST_PARAM_CITY_ID = "id";
+    //private static final String FORECAST_PARAM_CITY_ID = "id";
+    private static final String FORECAST_PARAM_CITY_ID = "q";
     /** The forecast URL parameter for the format required (JSON, XML, etc.). */
     private static final String FORECAST_PARAM_MODE = "mode";
     /** The forecast URL parameter for the units required (metric, imperial, etc.). */
@@ -184,11 +185,11 @@ public class MainFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch(id) {
-            case R.id.action_refresh:
+            case R.id.menu_item_refresh:
                 updateWeather();
                 return true;
 
-            case R.id.action_show_location:
+            case R.id.menu_item_location:
                 showLocation();
                 return true;
 
@@ -212,16 +213,26 @@ public class MainFragment extends Fragment {
         try {
             Geocoder geocoder = new Geocoder(getActivity());
             List<Address> addresses = geocoder.getFromLocationName(location, 1);
-            if (addresses != null) {
-                double latitude = addresses.get(0).getLatitude();
-                double longitude = addresses.get(0).getLongitude();
-                Uri geoLocation = Uri.parse("geo:" + latitude + "," + longitude);
+
+            if (addresses == null || addresses.size() < 1) {
+                Log.e(LOG_TAG, "Location not found");
+            } else {
+                //double latitude = addresses.get(0).getLatitude();
+                //double longitude = addresses.get(0).getLongitude();
+                //Uri geoLocation = Uri.parse("geo:" + latitude + "," + longitude);
+                Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
+                        .appendQueryParameter("q", location)
+                        .build();
 
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(geoLocation);
-                //if (intent.resolveActivity(getPackageManager()) != null) {
-                startActivity(intent);
-                //}
+                if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                    startActivity(intent);
+                } else {
+                    Log.w(LOG_TAG, "There is no app available which can handle Intent.ACTION_VIEW");
+                    Toast.makeText(getActivity(), getString(R.string.no_app_to_display_map),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         } catch (IOException e) {
 
