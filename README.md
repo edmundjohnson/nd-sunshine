@@ -1,2 +1,2 @@
 # nd-sunshine
-Project Sunshine
+Project Sunshine from the Udacity Android Nanodegree.
